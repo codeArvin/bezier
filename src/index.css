@@ -1,3 +1,13 @@
+@import '~antd/dist/antd.css';
+
+* {
+    user-select: none;
+}
+
+#root {
+    height: 100%;
+}
+
 body {
   margin: 0;
   padding: 0;
