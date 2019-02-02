@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import classNames from 'classnames';
-import util from './util';
+import util from '../util';
 import { Slider, List } from 'antd';
 
 const PRIMARY_COLOR_ENHANCE = 'rgba(33, 150, 243, 1)'; // 主题色-强调
@@ -21,11 +21,11 @@ const BEZIER_LINE_WIDTH = 4; // 贝塞尔曲线线宽
 const BEZIER_LINE_CAP = 'round'; // 贝塞尔曲线末端样式
 const BEZIER_COLOR = '#ff5722'; // 贝塞尔曲线颜色
 const DEFAULT_COUNT = 3; // 贝塞尔曲线控制点个数默认值
-const DEFAULT_DURATION = 1500; // 动画时长默认值
+const DEFAULT_DURATION = 2000; // 动画时长默认值
 const DEFAULT_EASING_TYPE = 'linear'; // 动画效果默认值
 
 const { rAF } = util.getRAF();
-class App extends Component {
+class Bezier extends Component {
     constructor(props) {
         super(props);
 
@@ -35,6 +35,8 @@ class App extends Component {
 
         this.canvas = null; // canvas dom
         this.ctx = null; // canvas 渲染上下文
+        this.canvasDetail = null; // 显示 detail 的 canvas dom
+        this.ctxd = null; // canvas detail 渲染上下文
         this.imageData = null; // canvas 画布信息
         this.canvasWidth = window.innerWidth - PANEL_WIDTH; // canvas width
         this.canvasHeight = window.innerHeight - 20; // canvas height
@@ -53,6 +55,7 @@ class App extends Component {
 
     componentDidMount() {
         this.ctx = this.canvas.getContext('2d');
+        this.ctxd = this.canvasDetail.getContext('2d');
         window.addEventListener('resize', this.windowResize); // 加上防抖
     }
 
@@ -194,7 +197,18 @@ class App extends Component {
         this.drawBezier();
     }
 
-    // 清空画布
+    // 绘制 detail，包括 dots
+    drawDetail = () => {
+        const ctxd = this.ctxd;
+        ctxd.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+        ctxd.font = '20px Arial';
+        ctxd.fillStyle = PRIMARY_COLOR_ENHANCE;
+        this.dots.forEach(({ x, y }, i) => {
+            ctxd.fillText(`[${x}, ${y}]`, 10, 25 * (i + 1));
+        });
+    }
+
+    // 清空 canvas 画布
     clear = () => {
         this.ctx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
     }
@@ -205,8 +219,9 @@ class App extends Component {
     }
 
     handleCanvasMouseDown = (e) => {
-        const _x = e.pageX - this.canvas.offsetLeft;
-        const _y = e.pageY - this.canvas.offsetTop;
+        const { left, top } = util.getOffset(this.canvas);
+        const _x = e.pageX - left;
+        const _y = e.pageY - top;
         const len = this.dots.length;
         if (len < this.count) {
             // 控制点数不够，继续绘制
@@ -219,6 +234,7 @@ class App extends Component {
                     endDot: curCoord
                 });
             }
+            this.drawDetail();
             // 如果是最后一个点，开始动画
             if (len + 1 === this.count) {
                 this.beginDrawing();
@@ -239,9 +255,10 @@ class App extends Component {
 
     handleCanvasMouseMove = (e) => {
         if (this.targetIndex === null) { return; }
+        const { left, top } = util.getOffset(this.canvas);
         this.dots[this.targetIndex] = {
-            x: e.pageX - this.canvas.offsetLeft,
-            y: e.pageY - this.canvas.offsetTop
+            x: e.pageX - left,
+            y: e.pageY - top
         };
         this.clear();
         this.bezierCoords = util.getBezierCoords(this.dots);
@@ -264,12 +281,15 @@ class App extends Component {
             case 'easingType':
                 this.easingType = value;
                 break;
+            default:
+                return;
         }
         this.dots = [];
         this.controlDots = [];
         this.colors = [];
         this.ratio = 0;
         this.bezierCoords = [];
+        this.ctxd.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
         this.clear();
         this.update();
     }
@@ -330,17 +350,25 @@ class App extends Component {
                         />
                     </div>
                 </div>
-                <canvas
-                    className="canvas"
-                    width={`${this.canvasWidth}px`}
-                    height={`${this.canvasHeight}px`}
-                    ref={c => this.canvas = c}
-                    onMouseDown={this.handleCanvasMouseDown}
-                    onMouseMove={this.handleCanvasMouseMove}
-                    onMouseUp={this.handleCanvasMouseUp}
-                >
-                    你的浏览器不支持 canvas， 请升级你的浏览器。
-                </canvas>
+                <div className="canvas">
+                    <canvas
+                        width={`${this.canvasWidth}px`}
+                        height={`${this.canvasHeight}px`}
+                        ref={c => this.canvasDetail = c}
+                    >
+                        你的浏览器不支持 canvas， 请升级你的浏览器。
+                    </canvas>
+                    <canvas
+                        width={`${this.canvasWidth}px`}
+                        height={`${this.canvasHeight}px`}
+                        ref={c => this.canvas = c}
+                        onMouseDown={this.handleCanvasMouseDown}
+                        onMouseMove={this.handleCanvasMouseMove}
+                        onMouseUp={this.handleCanvasMouseUp}
+                    >
+                        你的浏览器不支持 canvas， 请升级你的浏览器。
+                    </canvas>
+                </div>
                 <style jsx="true">{`
                     .App {
                         overflow: hidden;
@@ -399,6 +427,13 @@ class App extends Component {
                         border-radius: 5px;
                         box-shadow: 0 0 5px 1px ${PRIMARY_COLOR};
                         align-self: center;
+                        position: relative;
+                        line-height: 0;
+                    }
+                    .canvas canvas:last-child {
+                        position: absolute;
+                        top: 0;
+                        left: 0;
                     }
                 `}</style>
             </div>
@@ -406,4 +441,4 @@ class App extends Component {
     }
 }
 
-export default App;
+export default Bezier;
