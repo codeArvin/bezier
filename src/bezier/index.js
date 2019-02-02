@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import classNames from 'classnames';
 import util from '../util';
-import { Slider, List } from 'antd';
+import { Slider, List, Button } from 'antd';
 
 const PRIMARY_COLOR_ENHANCE = 'rgba(33, 150, 243, 1)'; // 主题色-强调
 const PRIMARY_COLOR = 'rgba(140, 200, 255, 1)'; // 主题色
@@ -284,6 +284,11 @@ class Bezier extends Component {
             default:
                 return;
         }
+        this.reset();
+    }
+
+    // 重置绘制相关变量，清空画布
+    reset = () => {
         this.dots = [];
         this.controlDots = [];
         this.colors = [];
@@ -311,6 +316,7 @@ class Bezier extends Component {
     }
 
     render() {
+        const { isAnimating } = this.state;
         return (
             <div className="App">
                 <div className="panel">
@@ -324,7 +330,7 @@ class Bezier extends Component {
                             step={1}
                             value={this.count}
                             onChange={this.handleConfigChange.bind(this, 'controlDot')}
-                            disabled={this.state.isAnimating}
+                            disabled={isAnimating}
                         />
                     </div>
                     <div className="duration">
@@ -336,18 +342,27 @@ class Bezier extends Component {
                             step={1000}
                             value={this.duration}
                             onChange={this.handleConfigChange.bind(this, 'duration')}
-                            disabled={this.state.isAnimating}
+                            disabled={isAnimating}
                         />
                     </div>
-                    <div className="animate">
-                        <div className="title">动画效果：{this.easingType}</div>
-                        <List
-                            className="easing-list"
-                            bordered={true}
-                            size="small"
-                            dataSource={Object.keys(util.ease)}
-                            renderItem={this.listRender}
-                        />
+                    <div className="third-part">
+                        <div className="animate">
+                            <div className="title">动画效果：{this.easingType}</div>
+                            <List
+                                className="easing-list"
+                                bordered={true}
+                                size="small"
+                                dataSource={Object.keys(util.ease)}
+                                renderItem={this.listRender}
+                            />
+                        </div>
+                        <div className="button-wrapper">
+                            <Button
+                                className="button"
+                                onClick={this.reset}
+                                disabled={isAnimating}
+                            >重绘</Button>
+                        </div>
                     </div>
                 </div>
                 <div className="canvas">
@@ -389,6 +404,27 @@ class Bezier extends Component {
                         flex-direction: column;
                         padding-left: 20px;
                         padding-top: 20px;
+                    }
+                    .third-part {
+                        display: flex;
+                        flex-direction: row;
+                    }
+                    .button-wrapper {
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: flex-start;
+                        align-items: center;
+                        flex-grow: 1;
+                        padding-top: 40px;
+                    }
+                    .button {
+                        width: 150px;
+                        border: 1px solid ${PRIMARY_COLOR};
+                        color: ${PRIMARY_COLOR_ENHANCE};
+                    }
+                    .button:hover {
+                        box-shadow: 0 0 5px 1px ${PRIMARY_COLOR_LIGHT};
+                        font-weight: bold;
                     }
                     .control, .duration {
                         width: 400px;

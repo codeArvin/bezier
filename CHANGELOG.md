@@ -7,6 +7,8 @@
 - 添加 .editorconfig
 - 添加 pre-commit 校验，会在 commit 的时候进行 eslint 校验
 - `npm run deploy` 自动发布 Github Page 页
+- 优化 bezier 曲线坐标计算方式 (本来以为用公式来求会提高效率，没想到效率反而没有直接用控制点求的方式高)
+- 添加重绘按钮
 
 ## 2019-2-1
 

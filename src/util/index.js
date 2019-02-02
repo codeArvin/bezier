@@ -30,21 +30,72 @@ const getControlDots = (dots, ratio) => {
     return controlDots;
 };
 
+const FACTORIAL_CACHE = { '0': 1, '1': 1 };
+/**
+ * 阶乘，通过 cache 保存计算过的结果
+ * @param {Number} n
+ */
+const factorial = function F(n) {
+    const k = `${n}`;
+    if (!FACTORIAL_CACHE[k]) {
+        FACTORIAL_CACHE[k] = n * F(n - 1);
+    }
+    return FACTORIAL_CACHE[k];
+};
+
+const C_CACHE = {};
+/**
+ * 组合数
+ * @param {Number} i
+ * @param {Number} n
+ */
+const C = (i, n) => {
+    const k = `${i}_${n}`;
+    if (!C_CACHE[k]) {
+        C_CACHE[k] = factorial(n) / (factorial(n - i) * factorial(i));
+    }
+    return C_CACHE[k];
+};
+
+/**
+ * 根据控制点和比例求出当前贝塞尔曲线上的点
+ * @param {Array} dots 控制点
+ * @param {Number} ratio 比例
+ */
+const getBezierCoord = (dots, ratio) => {
+    const n = dots.length - 1;
+    let coord = { x: 0, y: 0 };
+    for (let i = 0; i <= n; i++) {
+        // console.log('TTT: ', i, n);
+        coord.x += dots[i].x * C(i, n) * Math.pow((1 - ratio), n - i) * Math.pow(ratio, i);
+        coord.y += dots[i].y * C(i, n) * Math.pow((1 - ratio), n - i) * Math.pow(ratio, i);
+    }
+    return coord;
+};
+
 /**
  * 获取贝塞尔曲线的坐标点
  * @param {Array} dots [{x, y}, ...] 贝塞尔曲线最外层控制点
+ * @param {Boolean} sign true: 新方法，公式求 | false 老方法，控制点求
  */
-const getBezierCoords = (dots) => {
+const getBezierCoords = (dots, sign = false) => {
+    // eslint-disable-next-line
+    console.time(`${sign ? 'new': 'old'}`);
     const coords = [];
-    let controlDots = [];
     const step = 0.001;
     let ratio = 0;
     while(ratio <= 1) {
-        // 需要优化，直接求出曲线上面的点而不是一层一层求控制点
-        controlDots = getControlDots(dots, ratio);
-        coords.push(controlDots.pop()[0]);
+        if (sign) {
+            // 公式求，不直观、效率咋还低下来了?
+            sign && coords.push(getBezierCoord(dots, ratio));
+        } else {
+            // 控制点求，直观，但为啥效率却比用公式求高?
+            coords.push(getControlDots(dots, ratio).pop()[0]);
+        }
         ratio = +(ratio + step).toFixed(3); // 精度处理
     }
+    // eslint-disable-next-line
+    console.timeEnd(`${sign ? 'new': 'old'}`);
     return coords;
 };
 
