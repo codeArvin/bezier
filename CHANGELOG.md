@@ -6,6 +6,7 @@
 - 添加 README.md、CHANGELOG.md、TODO.md
 - 添加 .editorconfig
 - 添加 pre-commit 校验，会在 commit 的时候进行 eslint 校验
+- `npm run deploy` 自动发布 Github Page 页
 
 ## 2019-2-1
 
